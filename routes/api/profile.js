@@ -1,31 +1,40 @@
 const express = require('express');
-const router= express.Router();
-const normalize = require('normalize-url');
 const axios = require('axios');
 const config = require('config');
-const { check, validationResult } = require('express-validator');
-
-const checkObjectId = require('../../middleware/checkObjectId');
+const router = express.Router();
 const auth = require('../../middleware/auth');
-const Profile = require('../../models/Profile');
+const { check, validationResult } = require('express-validator');
+// bring in normalize to give us a proper url, regardless of what user entered
+const normalize = require('normalize-url');
+const checkObjectId = require('../../middleware/checkObjectId');
 
-router.get('/me', auth ,async(req, res)=>{
-   try{
+const Profile = require('../../models/Profile');
+const User = require('../../models/User');
+const Post = require('../../models/Post');
+
+// @route    GET api/profile/me
+// @desc     Get current users profile
+// @access   Private
+router.get('/me', auth, async (req, res) => {
+  try {
     const profile = await Profile.findOne({
-        user: req.user.id
-      }).populate('user', ['name', 'avatar']);
-      if (!profile) {
-        return res.status(400).json({ msg: 'There is no profile for this user' });
-      }
-      res.json(profile);
-   }
-   catch(err){
-       console.log(err);
-       res.statusCode(500).send('Server error');
-   }
-   
+      user: req.user.id
+    }).populate('user', ['name', 'avatar']);
+
+    if (!profile) {
+      return res.status(400).json({ msg: 'There is no profile for this user' });
+    }
+
+    res.json(profile);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
 });
 
+// @route    POST api/profile
+// @desc     Create or update user profile
+// @access   Private
 router.post(
   '/',
   auth,
@@ -266,6 +275,7 @@ router.get('/github/:username', async (req, res) => {
   } catch (err) {
     console.error(err.message);
     return res.status(404).json({ msg: 'No Github profile found' });
-  }});
+  }
+});
 
-  module.exports = router;
+module.exports = router;
